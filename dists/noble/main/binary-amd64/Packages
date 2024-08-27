@@ -1,0 +1,16 @@
+Package: proxysmart
+Version: 2.1-202408221235gitv2.dev~ubuntu24.04
+Architecture: amd64
+Maintainer: proxysmart dev
+Installed-Size: 6026
+Depends: nmap, bash, perl, gpg, python3-pip, make, libc6-dev, build-essential, libmodule-build-perl, libdevice-serialport-perl, libfile-copy-recursive-perl, libfile-slurp-perl, libjson-perl, libtry-tiny-perl, libuniversal-require-perl, libio-epoll-perl, libimage-imlib2-perl, libwww-perl, libbit-vector-perl, libxml-libxml-perl, zlib1g-dev, libyaml-syck-perl, libyaml-libyaml-perl, libyaml-perl, libyaml-tiny-perl, libnetfilter-queue-dev, libnfnetlink-dev, virtualenv, php-fpm, rrdtool, nginx, run-one, bsdextrautils, npm, j2cli, libpython3.12-dev, python3.12, gcc, haproxy (>= 2.2.0), tshark (>= 3.0.0), libsystemd-dev, python3-dateutil, python3-passlib, python3-psutil, python3-pyudev, python3-pymongo, python3-distro, python3-paramiko, python3-tabulate, python3-pyroute2, openvpn (>= 2.5.0), celery, python3-pystemd, python3-celery, python3-diskcache, rlwrap, python3-jinja2, python3-redis, redis-server, redis-tools, python3-rrdtool, librrd-dev, python3-magic, xq, yq, ndisc6
+Conflicts: firewalld, proxysmart-dev, ufw
+Priority: extra
+Section: net
+Filename: pool/main/p/proxysmart/proxysmart_2.1-202408221235gitv2.dev~ubuntu24.04_amd64.deb
+Size: 1391380
+SHA256: a0aa988f0a415c00a815458cb0e08a8e1175556d2c309bc344b4afe3ebe041d8
+SHA1: adaa03be1b92e444413c6884a3aca1ae1e5eabb6
+MD5sum: 4e8df1c065c21f7c2abc6d4ea6b816a7
+Description: Proxysmart
+

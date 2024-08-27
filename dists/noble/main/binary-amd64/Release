@@ -1,0 +1,5 @@
+Component: main
+Origin: pathos.tanatos.org
+Label: Proxysmart apt repository
+Architecture: amd64
+Description: Proxysmart

@@ -1,0 +1,28 @@
+Origin: pathos.tanatos.org
+Label: Proxysmart apt repository
+Codename: noble
+Date: Fri, 23 Aug 2024 10:57:40 UTC
+Architectures: amd64 arm64
+Components: main
+Description: Proxysmart
+MD5Sum:
+ c7fbeb6f71f59902464a086a59055d7f 1478 main/binary-amd64/Packages
+ a387e02f9eda34b4954419500d969227 772 main/binary-amd64/Packages.gz
+ a0d17eee82c4b6754819ee42d521e1b1 120 main/binary-amd64/Release
+ 680e1f36620cb85e80e3a3c9b6ba3596 1478 main/binary-arm64/Packages
+ 297639776a70eb66efd12a8bb34780e9 776 main/binary-arm64/Packages.gz
+ ea4bd23badaa71b27b57fd7c53066eb8 120 main/binary-arm64/Release
+SHA1:
+ f2fb8a0d64c8b85f509a9051ed6f71572cf4f0bc 1478 main/binary-amd64/Packages
+ d5650e4b593fba01b93f821a7a363e7c145de4af 772 main/binary-amd64/Packages.gz
+ 44fadb212c2525ebb4123b92c1c6c201b961a217 120 main/binary-amd64/Release
+ b18813074c4182bb2f9170a44186ca2ee0bb0cc0 1478 main/binary-arm64/Packages
+ 2afc14f1d722ceafcd811fc71c506bd408feefdc 776 main/binary-arm64/Packages.gz
+ b93c55323097da8e76bdc417e37ce731abba9d6d 120 main/binary-arm64/Release
+SHA256:
+ 8f80cfbedb4d7a911490399549559081cb77c7d4348f01f12e69ae9ee08f0cc1 1478 main/binary-amd64/Packages
+ ee3e57178e4a7fb028aa39facbc87ce89b1214e5d897bf443e697e7a3d382895 772 main/binary-amd64/Packages.gz
+ e4e65b2ab441cd027fe947686fb7b6b4f71df979ca7379099fed20c7199584d7 120 main/binary-amd64/Release
+ 4ae3fa6f54edd5824938104012d86c1203f2074168945dc719a7a5928db27ab1 1478 main/binary-arm64/Packages
+ 6423141a79bb56ccf6f4bdbb908d4c0a78a47d731f11b3ccfa068dd80e084af9 776 main/binary-arm64/Packages.gz
+ 4b32301f073596b4bc6422dc62c839a1ecb5487ba864655405057f0b14ed9f70 120 main/binary-arm64/Release
