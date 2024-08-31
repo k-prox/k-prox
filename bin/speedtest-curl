@@ -1,0 +1,191 @@
+
+
+# vim: filetype=bash
+
+
+MAX_TIME_TEST=10
+DL_URL=https://tun1.tanatos.org/file.txt
+UL_URL=https://postman-echo.com/post
+PING_URL=http://youtube.com
+CONN_URL="http://pathos.tanatos.org/file20k.txt"
+
+_convert_to_mbps() {
+local RAW=$1
+2>/dev/null numfmt --to=iec --suffix=bps --format %.2f  "$RAW" | tr '[:upper:]' '[:lower:]'
+}
+
+
+_test_download() {
+
+DL_SPEED_BYTES=$( curl $PX $DL_URL  -o /dev/null  -w '%{speed_download}\n' -m$MAX_TIME_TEST  -Ss  2>/dev/null  | cut -d. -f1)
+DL_SPEED_BYTES=$(( $DL_SPEED_BYTES+0))
+DL_SPEED=$(_convert_to_mbps $(( $DL_SPEED_BYTES * 8 )) )
+}
+
+_test_upload() {
+UL_SPEED_BYTES=$( dd if=/dev/urandom bs=1M count=20 2>/dev/null |   curl $PX -X POST $UL_URL --data-binary @-  -w '%{speed_upload}\n' -m$MAX_TIME_TEST -Ss  -o /dev/null 2>/dev/null | cut -d. -f1 )
+UL_SPEED_BYTES=$(( $UL_SPEED_BYTES+0))
+UL_SPEED=$(_convert_to_mbps $(( $UL_SPEED_BYTES * 8 )) )
+}
+
+_test_ping() {
+
+local CMD="curl -o /dev/null -Ss $PX $PING_URL -m5 -w %{time_total} ";
+local TIMES=()
+for i in 1 2 3 4 
+do
+    TIMES+=(    $( $CMD  )  )
+    sleep 0.5
+done
+PING_RESULT=$( echo ${TIMES[@]} | xargs -n1 | awk -F : '{sum+=$1} END {print 1000*sum/NR }' )ms
+
+}
+
+_test_conns(){
+local CMD
+local M
+local TMP=`mktemp /tmp/test_proxy_std_connections.XXXXXXXXXXXX`
+local SKIP_TESTS=0
+local OKS
+local FAILS
+local RATE_OKS
+local Completed
+
+for M in 5 10 20 50 100 200
+do
+    CMD="ab -X $PXH_r -P $PXU_r -c $M -n $M -r -s 10 $CONN_URL"
+    #echo $CMD
+    if [[ $SKIP_TESTS == 0 ]]
+    then
+        timeout 10 $CMD >  $TMP 2>/dev/null
+        #grep -E "Comple|Failed" $TMP
+        #cat $TMP
+        Completed=$( cat $TMP | grep 'Complete requests:' | head -n1 | grep -oP '\d+' )
+        Completed=${Completed:-0}
+        if [[ $Completed == 0 ]]
+        then FAILS=$M
+        else
+            Non200=$( cat $TMP | grep 'Non-2xx responses' | cut -d: -f2| grep -oP '\d+')
+            Non200=${Non200:-0}
+            FAILS=$( cat $TMP | grep 'Failed requests' | grep -oP '\d+')
+            FAILS=${FAILS:-0}
+            FAILS=$(( 0+$FAILS + $Non200 ))
+        fi
+        RPS=$( cat $TMP | grep 'Requests per second' | cut -d: -f2 | grep -oP '\d+\.\d+')
+        TPR=$( cat $TMP | grep 'Time per request' | head -n1 | grep -oP '\d+\.\d+')
+        RATE_OKS=$( = "100*($M - $FAILS )/$M"  | cut -d.  -f1 ) 
+        if [[ $RATE_OKS -lt 60 ]] || [[ $Completed == 0 ]]
+        then 
+            : poor result, skip rest of the tests
+            SKIP_TESTS=1
+        fi
+    else
+        OKS=skip
+        FAILS=skip
+        RATE_OKS=skip
+    fi
+    CONNS_RESULT+=" $M : { FAIL: $FAILS, RATE_OKS: $RATE_OKS, RPS: \"$RPS\", TPR : \"$TPR\"   },"
+done
+CONNS_RESULT=" { $CONNS_RESULT }"
+#ls $TMP
+rm $TMP
+#echo -e "$CONNS_RESULT"
+}
+
+= () 
+{ 
+    local calc=$(echo "$@" | sed "s/,/./g" );
+    echo "scale=10;$calc" | bc -l
+}
+
+_output() {
+
+echo -e "
+
+
+download: $DL_SPEED
+upload: $UL_SPEED
+ping: $PING_RESULT
+conns: $CONNS_RESULT
+
+time: $TOTAL_TIME seconds
+DL_URL: \"$DL_URL\"
+UL_URL: \"$UL_URL\"
+PING_URL: \"$PING_URL\"
+CONN_URL: \"$CONN_URL\"
+" | yq . 
+
+}
+
+
+usage() {
+
+echo "$0 -t TEST_TYPE [-x HTTP_PROXY:PORT [-U LOGIN:PASS]] [-i DOWNLOAD_URL] [-o UPLOAD_URL] [-p PING_URL]
+
+TEST_TYPE:
+    d   download
+    u   upload
+    p   ping
+    c   max connections
+    speed   download, upload
+    dup     download, upload, ping
+    all     download, upload, ping, max connections
+
+DOWNLOAD_URL    large file enough
+UPLOAD_URL      URL that accepts POST with large data
+PING_URL        the URL we measure latency with
+"
+
+}
+
+while getopts "t:x:U:i:o:p:" opt; do
+    case $opt in
+    t)  TEST=$OPTARG ;;
+    x)  PXH="-x $OPTARG" 
+        PXH_r=$OPTARG
+        ;;
+    U)  PXU="-U $OPTARG" 
+        PXU_r=$OPTARG
+        ;;
+    i)  DL_URL=$OPTARG ;;
+    o)  UL_URL=$OPTARG ;;
+    p)  PING_URL=$OPTARG ;;
+    esac
+done
+
+if [[ -z $TEST ]] ; then usage; exit 1;  fi
+
+PX="$PXH $PXU"
+
+TIME1=`date +%s`
+
+case $TEST in
+    speed) _test_download
+            sleep 2
+            _test_upload
+            ;;
+    dup)    _test_download
+            sleep 2
+            _test_upload
+            sleep 1
+            _test_ping
+            ;;
+    u)  _test_upload    ;;
+    d)  _test_download  ;;
+    p)  _test_ping  ;;
+    c)  _test_conns ;;
+    all)    _test_download
+            sleep 2
+            _test_upload
+            _test_ping
+            sleep 2
+            _test_conns
+            ;;
+    *)    usage    ; exit 1   ;;
+esac
+
+TIME2=`date +%s`
+TOTAL_TIME=$(( $TIME2 - $TIME1 ))
+
+_output
+

@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# works with EasyRSA 3.
+
+if [ ! $1 ]; then echo USAGE: $0 clientname; exit 1; fi
+NAME=$1
+cd /etc/openvpn/easy-rsa
+
+rm -f pki/private/$NAME.key pki/issued/$NAME.crt pki/reqs/$NAME.req
+sed -i "/CN=$NAME\//d" pki/index.txt
+
+./easyrsa --batch build-client-full $NAME nopass
+
+rm -rf tmp
+mkdir tmp
+
+CA_FILE="/etc/openvpn/easy-rsa/pki/ca.crt"
+CRT_FILE="/etc/openvpn/easy-rsa/pki/issued/$NAME.crt"
+KEY_FILE="/etc/openvpn/easy-rsa/pki/private/$NAME.key"
+CLIENT_FILE=tmp/client.ovpn
+
+
+if [[  -f "$CRT_FILE" ]] && [[ -f "$KEY_FILE" ]]
+then :
+else    echo bad crt ; exit 2;
+fi
+
+echo "; config file for client $NAME" >> $CLIENT_FILE
+cat /etc/openvpn/client.ovpn.template >> $CLIENT_FILE
+
+# Add the certificate authority
+echo '<ca>'   >> $CLIENT_FILE
+cat $CA_FILE  >> $CLIENT_FILE
+echo '</ca>'  >> $CLIENT_FILE
+# Add the certificate
+echo '<cert>' >> $CLIENT_FILE
+cat $CRT_FILE >> $CLIENT_FILE
+echo '</cert>'>> $CLIENT_FILE
+# Add the key
+echo '<key>'  >> $CLIENT_FILE
+cat $KEY_FILE >> $CLIENT_FILE
+echo '</key>' >> $CLIENT_FILE
+
+todos $CLIENT_FILE
+
+mv $CLIENT_FILE  /home/vpn/$NAME.ovpn
+
+rmdir tmp
+echo grab the file /home/vpn/$NAME.ovpn

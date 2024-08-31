@@ -1,0 +1,58 @@
+#!/bin/bash
+
+
+# vim: filetype=sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+#run_cached <cmd [arg1] [arg2] ..>
+
+RUN_CACHED_TTL=${RUN_CACHED_TTL:-20}   #seconds
+RUN_TIMEOUT=${RUN_TIMEOUT:-60}
+
+_main() {
+
+local RUNID=a 
+
+local CACHED_FOLDER=/dev/shm/run_cached.$(id -u -n)
+local CACHED_HASH=$(echo "$@" | openssl md5| awk '{print $2}')
+local CACHED_RUN_NORMALIZED=$( echo "$@" | perl -p  -ne 's@[^\w\d\.\-]@.@g' | cut -b-200 )
+local CACHED_FNAME=cached.$RUNID.$CACHED_RUN_NORMALIZED.md5:$CACHED_HASH
+local CACHED_STDOUT=$CACHED_FOLDER/$CACHED_FNAME.stdout
+local CACHED_STDERR=$CACHED_FOLDER/$CACHED_FNAME.stderr
+local CACHED_EXITCODE=$CACHED_FOLDER/$CACHED_FNAME.exitcode
+
+local CACHED_AGE
+
+if [[ -f $CACHED_EXITCODE ]]
+then    CACHED_AGE=$(($(date +%s) - $(date +%s -r "$CACHED_EXITCODE") ))
+else    CACHED_AGE=99999999
+fi
+
+#echo "= CACHED_EXITCODE $CACHED_EXITCODE, CACHED_AGE $CACHED_AGE" 1>&2 
+mkdir -p $CACHED_FOLDER
+
+#if [[ $CACHED_AGE -lt  $RUN_CACHED_TTL ]]
+if [[ $CACHED_AGE -lt  $RUN_CACHED_TTL ]] && [[ $(cat $CACHED_STDOUT | wc -c ) -gt 2 ]]
+then    
+    #echo "= exists & fresh"
+    :
+    echo "HIT $@" | logger -t run_cache
+    test -f $CACHED_STDOUT && cat $CACHED_STDOUT
+    test -f $CACHED_STDERR && cat $CACHED_STDERR 1>&2
+else
+    echo "MISS $@" | logger -t run_cache
+    #timeout -s 9 $RUN_TIMEOUT "$@" > $CACHED_STDOUT 2>$CACHED_STDERR
+    #test -f $CACHED_STDOUT && cat $CACHED_STDOUT
+    timeout -s 9 $RUN_TIMEOUT "$@"  2>$CACHED_STDERR | tee $CACHED_STDOUT
+    test -f $CACHED_STDERR && cat $CACHED_STDERR 1>&2
+    echo $? > $CACHED_EXITCODE
+fi
+
+return $(cat $CACHED_EXITCODE) 
+}
+
+_main "$@" 
+
+#"$@" 
+
+

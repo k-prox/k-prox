@@ -1,0 +1,18 @@
+#!/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# vim: filetype=bash
+
+shell2http -host 127.0.0.1 -port 4001 -export-all-vars -cache=4 -form  \
+    /apix/show_single_status_json   'proxysmart.sh show_single_status_json $v_arg'   \
+    /apix/reset_modem_by_imei       'proxysmart.sh reset_modem_by_imei $v_IMEI quick'   \
+    /apix/reset_modem_by_nick       'proxysmart.sh reset_modem_by_imei "$v_NICK" quick'   \
+    /apix/reboot_modem_by_imei      'proxysmart.sh reset_modem_by_imei $v_IMEI full'   \
+    /apix/reboot_modem_by_nick      'proxysmart.sh reset_modem_by_imei "$v_NICK" full'    \
+    /apix/usb_reset_modem_json      'proxysmart.sh usb_reset_modem_json $v_arg'     \
+    /apix/purge_sms_json            'proxysmart.sh purge_sms_json $v_arg'     \
+    /apix/top_hosts                 'proxysmart.sh top_hosts $v_arg'          \
+    /apix/unique_ips_json           'proxysmart.sh unique_ips_json'           \
+    /apix/reset_complete_async      'screen -S RC -d -m  proxysmart.sh reset_complete; echo Started'         \
+    /apix/reboot_server             'reboot'    \
+
+
